@@ -1,0 +1,12 @@
+STEP 0 
+    make the board
+    draw the pieces in state 0
+    piece mouvement
+    piece captures
+    checker rules
+    highlight selected squares and possible moves
+    turn by turn
+    polishing
+
+STEP 1
+    make bot that can play you
