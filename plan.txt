@@ -1,6 +1,6 @@
 STEP 0 
-    make the board
-    draw the pieces in state 0
+    make the board                                      done
+    draw the pieces in state 0                          done
     piece mouvement
     piece captures
     checker rules
@@ -10,3 +10,7 @@ STEP 0
 
 STEP 1
     make bot that can play you
+
+----------------------------------
+ideas:
+    
