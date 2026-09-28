@@ -28,22 +28,51 @@ DARKCOLOR = (69, 36, 20)
 CELLDIMX=CELLDIMY= float(_VARS['gridWH']/_VARS['gridCells']) #cell dimensions
 
 #this allows me to get which row and column the click was on
-def getRowCol():
-    ev = pygame.event.get()
-    for event in ev:
-        #if mouse button clicked
-        if event.type == pygame.MOUSEBUTTONUP:
-            #this gets the position of the click
-            x,y = pygame.mouse.get_pos()
-            #checks if the click was in the grid
-            if _VARS['gridWH']<=x or x <=_VARS['gridOrigin'][0] or _VARS['gridWH']<=y or y<=_VARS['gridOrigin'][1]: 
-                return False
-            else:
-                #if not calculates which row based on the formula that gave us x and y
-                row = (x- _VARS['gridOrigin'][0] - _VARS['lineWidth']/2) //CELLDIMX
-                col = (y - _VARS['gridOrigin'][1] - _VARS['lineWidth']/2) //CELLDIMY
-                return (row,col)
+def getRowCol(pos):
+    x,y = pos
+    #checks if the click was in the grid
+    if _VARS['gridWH']+_VARS['gridOrigin'][0] <=x or x <=_VARS['gridOrigin'][0] or _VARS['gridWH']+_VARS['gridOrigin'][1] <=y or y<=_VARS['gridOrigin'][1]: 
+        return False
+    else:
+        #if not calculates which row based on the formula that gave us x and y
+        row = (x- _VARS['gridOrigin'][0] - _VARS['lineWidth']/2) //CELLDIMX
+        col = (y - _VARS['gridOrigin'][1] - _VARS['lineWidth']/2) //CELLDIMY
+        return row,col
 
+#checks if there is a piece and gets its row and col
+def containsPiece():
+    pos = pygame.mouse.get_pos()
+    getrowcol = getRowCol(pos)
+    if getrowcol:
+        col,row = getrowcol
+        if piecesmap[int(row)][int(col)]:
+            return row,col
+        else: 
+            return False
+
+#get the coordinates
+def selectedPieceCoordinates():
+    selectedcell = containsPiece()
+    if selectedcell:
+        row,col = selectedcell
+        return row,col
+
+#draws the highlight
+def drawHighlight(selected):
+    #This segment makes sure to clear the highlighted cell before it
+    _VARS['highlight'].fill((0,0,0,0))
+    _VARS['surf'].blit(_VARS['highlight'])
+
+    #the selected variable is a tuple storing the row and col of the cell we clicked in
+    if selected:
+        #extract the row and col
+        row,col = selected
+        #calculate the coordinates
+        x = _VARS['gridOrigin'][0] + (CELLDIMX*col)+_VARS['lineWidth']/2
+        y = _VARS['gridOrigin'][1] + (CELLDIMY*row)+_VARS['lineWidth']/2
+        #draw the highlight
+        pygame.draw.rect(_VARS['highlight'], (0,255,0,100), (x,y,CELLDIMX,CELLDIMY))
+        _VARS['surf'].blit(_VARS['highlight'])
 
 def placePieces():
 
@@ -63,7 +92,7 @@ def placePieces():
                 drawPieces( center ,CELLDIMX/2.5, 'white')
             elif piecesmap[col][row] == 'b':
                 drawPieces( center ,CELLDIMX/2.5, 'black')    
-    
+
 
 def drawBoard():
     
@@ -118,17 +147,26 @@ def drawBoard():
 def main():
     pygame.init()
     _VARS['surf'] = pygame.display.set_mode(SCREENSIZE)
+    _VARS['highlight'] = pygame.Surface(SCREENSIZE, pygame.SRCALPHA)
     running = True
+    selected = False
     while running:
         for event in pygame.event.get():
             if event.type ==pygame.QUIT:
                 running = False
+            #This checks for clicks
+            if event.type ==pygame.MOUSEBUTTONUP:
+                selected = selectedPieceCoordinates()
+           
         _VARS['surf'].fill('grey')
+        
         drawBoard()
         placePieces()
-        pygame.display.update()
         
-
+        if selected:
+            drawHighlight(selected)
+        
+        pygame.display.update()
 
 if __name__ == '__main__':
     main()
