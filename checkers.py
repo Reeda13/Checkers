@@ -27,17 +27,23 @@ LIGHTCOLOR = (219, 184, 108)
 DARKCOLOR = (69, 36, 20)
 CELLDIMX=CELLDIMY= float(_VARS['gridWH']/_VARS['gridCells']) #cell dimensions
 
-#main game loop
-def main():
-    pygame.init()
-    _VARS['surf'] = pygame.display.set_mode(SCREENSIZE)
+#this allows me to get which row and column the click was on
+def getRowCol():
+    ev = pygame.event.get()
+    for event in ev:
+        #if mouse button clicked
+        if event.type == pygame.MOUSEBUTTONUP:
+            #this gets the position of the click
+            x,y = pygame.mouse.get_pos()
+            #checks if the click was in the grid
+            if _VARS['gridWH']<=x or x <=_VARS['gridOrigin'][0] or _VARS['gridWH']<=y or y<=_VARS['gridOrigin'][1]: 
+                return False
+            else:
+                #if not calculates which row based on the formula that gave us x and y
+                row = (x- _VARS['gridOrigin'][0] - _VARS['lineWidth']/2) //CELLDIMX
+                col = (y - _VARS['gridOrigin'][1] - _VARS['lineWidth']/2) //CELLDIMY
+                return (row,col)
 
-    while True:
-        checkEvents()
-        _VARS['surf'].fill('grey')
-        drawBoard()
-        placePieces()
-        pygame.display.update()
 
 def placePieces():
 
@@ -107,12 +113,22 @@ def drawBoard():
     drawSquareGrid(_VARS['gridOrigin'],_VARS['gridWH'], _VARS['gridCells'])
     placeCells()
 
-#quit the window
-def checkEvents():
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
+
+#main game loop
+def main():
+    pygame.init()
+    _VARS['surf'] = pygame.display.set_mode(SCREENSIZE)
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type ==pygame.QUIT:
+                running = False
+        _VARS['surf'].fill('grey')
+        drawBoard()
+        placePieces()
+        pygame.display.update()
+        
+
 
 if __name__ == '__main__':
     main()
