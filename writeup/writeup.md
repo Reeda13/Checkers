@@ -39,3 +39,16 @@ A lot of meddling after I separated the process into 4 functions:
   
 To make everything work in the `main` function I check for any click and if one is detected `selected` stores the coordinates using `selectedPieceCoordinates()`, I do another check after so that if selected isn't empty `drawHighlight()` does it's job!
 ![highlight](image-3.png)
+
+## Day 4: Possible moves
+I'm very proud of this day! Today's goal was to compute the possible moves, store them and show them.
+
+The implementation I did yesterday for highlighting the selected piece really paid off and skipped a lot of work for me today. 
+
+First thing I did was get the selected cell row and col and print the next moves that being `row+1, col+-1` for black and `row-1, col+-1` for white in the new function `getPossibleMoves()`. I then started going over cases like if a piece is in the edge. Basically I did **ALOT** of `if` checks to go over all the possible edge cases for both white and black, with the help of a helper function `isEmpty()` which as the name suggests checks if the provided cell is empty. I am aware this isn't the most optimal solution but hey, if it works it works.
+
+I then made a second function `drawPossibleMoves()` which does what the name suggests. Bingo!
+
+I was feeling proud and well so I tought why not tackling capturing case, in `getPossibleMoves()` I added more edge cases to check if the one of the 2 cells diagonally have an opposite color piece and if so and only if it is empty and in bound can render it.
+
+![Possible moves](image-4.png) 

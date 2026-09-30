@@ -4,7 +4,7 @@ STEP 0
     piece mouvement
     piece captures
     checker rules
-    highlight selected squares and possible moves
+    highlight selected squares and possible moves       half done
     turn by turn
     polishing
 
