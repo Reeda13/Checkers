@@ -52,3 +52,12 @@ I then made a second function `drawPossibleMoves()` which does what the name sug
 I was feeling proud and well so I tought why not tackling capturing case, in `getPossibleMoves()` I added more edge cases to check if the one of the 2 cells diagonally have an opposite color piece and if so and only if it is empty and in bound can render it.
 
 ![Possible moves](image-4.png) 
+
+## Day 5: Mouvement and captures
+Today, I told myself I would just make a hover effect on the possible moves squares which after lots of meddling I did! Process was weird and I had to redo A lot of stuff, but done nonetheless.
+
+But the highlight of today was when I continued, and added movement. This showed me a lot of problems in my existing program, mainly `getPossibleMoves()` which was an amalgomy of if statements. I redid it and now it looks sexy af! Mouvement was surprisingly simple, I moved the piece in the matrix and voila, moved on the grid aswell. 
+
+Capturing needed an another approach to the piece being captured. What I did was in the possible moves, I added 2 variables representing captured_row and captured_col and when they exists i.e aren't 0, then I delete the piece with those coordinate.
+
+I'm very proud of how this is coming along, next step is making it turn based which could be a struggle!

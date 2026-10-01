@@ -17,8 +17,7 @@ for row in range(piecesmap.shape[0]):
             piecesmap[row][col] = 'b'
         elif row in (5,6,7) and row%2 != col%2:
             piecesmap[row][col] = 'w'
-piecesmap[3][6] = 'w'
-piecesmap[4][3] = 'b'
+
 
 #variables related to the window
 _VARS = {'surf': False, 'gridWH':400,'gridOrigin':(100,140), 'gridCells':cellmap.shape[0], 'lineWidth':2}
@@ -40,7 +39,7 @@ def getRowCol(pos):
         #if not calculates which row based on the formula that gave us x and y
         row = (x- _VARS['gridOrigin'][0] - _VARS['lineWidth']/2) //CELLDIMX
         col = (y - _VARS['gridOrigin'][1] - _VARS['lineWidth']/2) //CELLDIMY
-        return row,col
+        return int(row),int(col)
 
 #checks if there is a piece and gets its row and col
 def containsPiece():
@@ -151,86 +150,70 @@ def isEmpty(row,col): #Helper function to check if cell is empty
     else:
         return False
 
+def sameColor(old, new): #helper function to check if 2 pieces are same color
+    x,y = old
+    dx, dy = new
+    if piecesmap[x][y] and piecesmap[dx][dy]:
+        return piecesmap[x][y] == piecesmap[dx][dy]
+
+def oppositeColor(old,new): #helper function to check if 2 pieces are opposite color
+    x,y = old
+    dx, dy = new
+    if 0<=dx<=7 and 0<=dy<=7:
+        if piecesmap[x][y] and piecesmap[dx][dy]:
+            return piecesmap[x][y]!=piecesmap[dx][dy]
+
+
+#rework on the getpossiblemoves
 def getPossibleMoves(selected):
-    possible_moves = False
-    #this function computes the possible moves
-    row, col = selected
-    row, col = int(row), int(col)
-    
-    #white pieces
-    if piecesmap[row][col] == 'w':
-        #capturing
-        
-        #if a piece is at the edge with a capturable piece in sight
-        if col == 0 and piecesmap[row-1][col+1]=='b' and 0<=row-2 and piecesmap[row-2][col+2] == '':
-            possible_moves = [(row-2,col+2)]
-        
-        #if a piece is at the other edge with a capturable piece in sight
-        elif col == 7 and piecesmap[row-1][col-1] == 'b'and 0<=row-2 and piecesmap[row-2][col-2] == '':
-            possible_moves = [(row-2, col-2)]
-        
-        #if piece in middle with one capture in sight
-        elif 0<col<7 and piecesmap[row-1][col-1] == 'b' and 0<=row-2 and 0<=col-2<=7 and piecesmap[row-2][col-2] == '' :
-            possible_moves = [(row-2, col-2), (row-1, col+1)]
-        
-        #if piece in middle with the other capture in sight
-        elif 0<col<7 and piecesmap[row-1][col+1] == 'b'and 0<=row-2 and 0<=col+2<=7 and piecesmap[row-2][col+2] == '' :
-            possible_moves = [(row-2, col+2), (row-1, col-1)]
+        #initialize  possible moves
+        possible_moves = []
 
-        #same but for mouvement
-        #if in edge
-        elif col==0 and row-1>=0 and isEmpty(row-1, col+1):
-            possible_moves = [(row-1, col+1)]
-        #if in other edge
-        elif col==7 and row-1>=0 and isEmpty(row-1, col-1):
-            possible_moves = [(row-1, col-1)]
-        #if in middle
-        elif 0<col<7 and row-1>=0 and isEmpty(row-1, col+1) and isEmpty(row-1, col-1):
-            possible_moves = [(row-1, col+1), (row-1, col-1)]
+        if selected:
+            row,col = selected
+            directions = []
+            
+            #by doing this we remove the need to repeat for the other color
+            if piecesmap[row][col]=='w':
+                directions = [(-1,1),(-1, -1)]
 
+            elif piecesmap[row][col] == 'b':
+                directions = [(1,1), (1,-1)]
 
-    
-    #black pieces
-    elif piecesmap[row][col] == 'b':
-        #capturing
-        #if in edge with capturable piece in range
-        if col == 0 and piecesmap[row+1][col+1] == 'w' and row+2<=7 and piecesmap[row+2][col+2] == '' :
-            possible_moves = [(row+2,col+2)]
+            #loop over the 2 new squares
+            for dx,dy in directions:
+                #making sure we are on bounds
+                if 0<=row+dx<=7 and 0<=col+dy<=7 and isEmpty(row+dx, col+dy):
 
-        #if in other edge with capturable piece in range
-        elif col == 7 and piecesmap[row+1][col-1] == 'w' and row+2<=7 and piecesmap[row+2][col-2] == '' :
-            possible_moves = [(row+2, col-2)]
+                    #The last 2 variables are supposed to be the captured piece coordinates
+                    possible_moves.append((row+dx, col+dy, 0,0))
+                    
+                #checking for captures
+                if oppositeColor((row,col),(row+dx,col+dy)) and 0<=row+2*dx<=7 and 0<=col+2*dy<=7 and isEmpty(row+2*dx, col+2*dy):
+                    '''
+                    #leaving double captures for later
+                    if oppositeColor((row,col),(row+3*dx,col)) and 0<=row+4*dx<=7 and 0<=col+4*dy<=7 and isEmpty(row+4*dx, col+4*dy):
+                        possible_moves.append((row+4*dx, col+4*dy, row+3*dx, col+3*dy ))
 
-        #if in middle with capturable piece in range
-        elif 0<col<7 and piecesmap[row+1][col-1] == 'w' and row+2<=7 and 0<=col-2<=7 and piecesmap[row+2][col-2] == '' :
-            possible_moves = [(row+2, col-2), (row+1, col+1)]
+                    if oppositeColor((row,col),(row+3*dx,col+dy)) and 0<=row+4*dx<=7 and isEmpty(row+4*dx, col):
+                        possible_moves.append((row+4*dx, col, row+dx, col))'''
+                    
+ 
+                        
+                        #we append the new location of the piece and the captured piece row and col
 
-        #if in middle with other capturable piece in range 
-        elif 0<col<7 and piecesmap[row+1][col+1] == 'w' and row+2<=7 and 0<=col+2<=7 and piecesmap[row+2][col+2] == '' :
-            possible_moves = [(row+2, col+2), (row+1, col-1)]
+                    possible_moves.append((row+2*dx, col+2*dy, row+dx, col+dy ))
 
-        #same but for mouvement
-        #if in edge
-        elif col==0 and isEmpty(row+1, col+1):
-            possible_moves = [(row+1, col+1)]
+            return possible_moves
 
-        #if in other edge
-        elif col==7 and isEmpty(row+1, col-1):
-            possible_moves = [(row+1, col-1)]
-
-        #if in middle
-        elif 0<col<7 and row+1<=7 and  isEmpty(row+1, col+1) and isEmpty(row+1, col-1):
-            possible_moves = [(row+1, col+1), (row+1, col-1)]
-        
-        
-    
-    return possible_moves
 
 
 def drawPossibleMoves(selected):#draw said possible moves
     #This segment makes sure to clear the possible moves before
     _VARS['highlight'].fill((0,0,0,0))
     _VARS['surf'].blit(_VARS['highlight'], (0,0))
+
+    rect = None
 
     #we get the array of possible moves
     possible_moves=getPossibleMoves(selected)
@@ -239,15 +222,60 @@ def drawPossibleMoves(selected):#draw said possible moves
     if possible_moves:
         #loop over it
         for possible_move in possible_moves:
-            col, row = possible_move
+            #since getpossiblemoves returns 4 variables we extract 4 tho we use 2
+            col, row, a, b = possible_move
             #our trusty formula to go from matrice to grid
             x = _VARS['gridOrigin'][0] + (CELLDIMX*row)+_VARS['lineWidth']/2 + CELLDIMX/2
             y = _VARS['gridOrigin'][1] + (CELLDIMY*col)+_VARS['lineWidth']/2 + CELLDIMY/2
             center = (x,y)
-            
+            #the possible moves
             pygame.draw.circle(_VARS['highlight'], HIGHLIGHT, center=center, radius=CELLDIMX/3)
-        
+            
+            #the next segment is an aesthetic touch, a hover effect on those said possible move
+            rect = pygame.Rect(x-CELLDIMX/2,y-CELLDIMY/2,CELLDIMX,CELLDIMY)
+            pos = pygame.mouse.get_pos()
+            ishovered = rect.collidepoint(pos)
+            if ishovered:
+                pygame.draw.rect(_VARS['highlight'],HIGHLIGHT, (x-CELLDIMX/2,y-CELLDIMY/2,CELLDIMX,CELLDIMY))
+            
         _VARS['surf'].blit(_VARS['highlight'], (0,0))
+    
+
+def clickedPossibleMove(selected, pos):#This function checks if user clicked one of the possible moves squares
+    rowcol = getRowCol(pos)
+    if rowcol:
+        #there is a weird glitch in the program that reverses them i cant figure it why but I can work around it
+        col,row = rowcol 
+        #convert them to int
+        col, row = int(col), int(row)
+        possible_moves = getPossibleMoves(selected)
+        #check if the clicked location is in possible moves        
+        if possible_moves:
+            #x = row, y=col, a=captured piece row, b=captured piece col
+            for x,y,a,b in possible_moves:
+                if row == x and col == y:
+                    return (x,y,a,b)
+
+
+def movement(selected, pos):
+    if selected:
+
+        clicked = clickedPossibleMove(selected, pos)
+        
+        if clicked:
+            
+            row, col = selected
+            #we extract the 4 variables form possible moves
+            newrow, newcol, capturedrow, capturedcol = clicked
+            #the existance of those 2 mean a cell is captured
+            if capturedrow and capturedcol:
+                #remove the captured piece
+                piecesmap[capturedrow][capturedcol] =''
+            #relocate the piece, the next line is to get the pieces color
+            piecesmap[newrow][newcol] = piecesmap[row][col]
+            #remove the original
+            piecesmap[row][col] = ''
+
 
 
 #main game loop
@@ -257,14 +285,21 @@ def main():
     _VARS['highlight'] = pygame.Surface(SCREENSIZE, pygame.SRCALPHA)
     running = True
     selected = False
+  
+
     while running:
         for event in pygame.event.get():
             if event.type ==pygame.QUIT:
                 running = False
             #This checks for clicks
             if event.type ==pygame.MOUSEBUTTONUP:
+
+                if selected: 
+                    movement(selected, pygame.mouse.get_pos())
                 selected = selectedPieceCoordinates()
-           
+
+
+
         _VARS['surf'].fill('grey')
         
         drawBoard()
@@ -272,8 +307,10 @@ def main():
         if selected:
             drawHighlight(selected)
             drawPossibleMoves(selected)
-        
+
+
         pygame.display.update()
+
 
 if __name__ == '__main__':
     main()

@@ -1,10 +1,10 @@
 STEP 0 
     make the board                                      done
     draw the pieces in state 0                          done
-    piece mouvement
-    piece captures
+    piece mouvement                                     done
+    piece captures                                      done
     checker rules
-    highlight selected squares and possible moves       half done
+    highlight selected squares and possible moves       done
     turn by turn
     polishing
 
