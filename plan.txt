@@ -5,7 +5,7 @@ STEP 0
     piece captures                                      done
     checker rules
     highlight selected squares and possible moves       done
-    turn by turn
+    turn by turn                                        done
     polishing
 
 STEP 1

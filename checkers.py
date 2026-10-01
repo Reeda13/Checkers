@@ -18,6 +18,7 @@ for row in range(piecesmap.shape[0]):
         elif row in (5,6,7) and row%2 != col%2:
             piecesmap[row][col] = 'w'
 
+piecesmap[3][4] = 'W'
 
 #variables related to the window
 _VARS = {'surf': False, 'gridWH':400,'gridOrigin':(100,140), 'gridCells':cellmap.shape[0], 'lineWidth':2}
@@ -28,6 +29,7 @@ LIGHTCOLOR = (219, 184, 108)
 DARKCOLOR = (69, 36, 20)
 HIGHLIGHT =(0,255,0,100)
 CELLDIMX=CELLDIMY= float(_VARS['gridWH']/_VARS['gridCells']) #cell dimensions
+
 
 #this allows me to get which row and column the click was on
 def getRowCol(pos):
@@ -93,8 +95,15 @@ def placePieces():
             if piecesmap[col][row] == 'w':
                 drawPieces( center ,CELLDIMX/2.5, 'white')
             elif piecesmap[col][row] == 'b':
-                drawPieces( center ,CELLDIMX/2.5, 'black')    
-
+                drawPieces( center ,CELLDIMX/2.5, 'black')
+            
+            #for kings    
+            elif piecesmap[col][row] == 'W':
+                drawPieces(center, CELLDIMX/2, 'orange')
+                drawPieces(center, CELLDIMX/2.5, 'white')
+            elif piecesmap[col][row] == 'B':
+                drawPieces(center, CELLDIMX/2, 'yellow')
+                drawPieces(center, CELLDIMX/2.5, 'black')
 
 def drawBoard():
     
@@ -154,15 +163,26 @@ def sameColor(old, new): #helper function to check if 2 pieces are same color
     x,y = old
     dx, dy = new
     if piecesmap[x][y] and piecesmap[dx][dy]:
-        return piecesmap[x][y] == piecesmap[dx][dy]
+        return piecesmap[x][y].lower() == piecesmap[dx][dy].lower()
 
 def oppositeColor(old,new): #helper function to check if 2 pieces are opposite color
     x,y = old
     dx, dy = new
     if 0<=dx<=7 and 0<=dy<=7:
-        if piecesmap[x][y] and piecesmap[dx][dy]:
-            return piecesmap[x][y]!=piecesmap[dx][dy]
+        if piecesmap[x][y]  and piecesmap[dx][dy]:
+            return piecesmap[x][y].lower() !=piecesmap[dx][dy].lower()
 
+def makeKing(row,col):
+    if piecesmap[row][col] == 'w':
+        piecesmap[row][col] = 'W'
+    elif piecesmap[row][col] == 'b':
+        piecesmap[row][col] = 'B'
+
+def isKing(row, col):
+    if piecesmap[row][col] in ('W', 'B'):
+        return True
+    else:
+        return False
 
 #rework on the getpossiblemoves
 def getPossibleMoves(selected):
@@ -172,6 +192,8 @@ def getPossibleMoves(selected):
         if selected:
             row,col = selected
             directions = []
+            #check if king captured
+            captured =  ()
             
             #by doing this we remove the need to repeat for the other color
             if piecesmap[row][col]=='w':
@@ -180,30 +202,54 @@ def getPossibleMoves(selected):
             elif piecesmap[row][col] == 'b':
                 directions = [(1,1), (1,-1)]
 
-            #loop over the 2 new squares
-            for dx,dy in directions:
-                #making sure we are on bounds
-                if 0<=row+dx<=7 and 0<=col+dy<=7 and isEmpty(row+dx, col+dy):
+            elif isKing(row, col):
+                directions = [(1,1),(1,-1),(-1,-1),(-1,1)]
 
-                    #The last 2 variables are supposed to be the captured piece coordinates
-                    possible_moves.append((row+dx, col+dy, 0,0))
-                    
-                #checking for captures
-                if oppositeColor((row,col),(row+dx,col+dy)) and 0<=row+2*dx<=7 and 0<=col+2*dy<=7 and isEmpty(row+2*dx, col+2*dy):
-                    '''
-                    #leaving double captures for later
-                    if oppositeColor((row,col),(row+3*dx,col)) and 0<=row+4*dx<=7 and 0<=col+4*dy<=7 and isEmpty(row+4*dx, col+4*dy):
-                        possible_moves.append((row+4*dx, col+4*dy, row+3*dx, col+3*dy ))
+            if isKing(row,col):
+                for dx,dy in directions:
+                    captured = ()
+                    for i in range(1,8):
+                        #if we encounter a piece of our own there is no point in continuing in that direction
+                        if 0<=row+i*dx<=7 and 0<=col+i*dy<=7 and sameColor((row, col), (row+i*dx, col+i*dy)) :
+                            break
 
-                    if oppositeColor((row,col),(row+3*dx,col+dy)) and 0<=row+4*dx<=7 and isEmpty(row+4*dx, col):
-                        possible_moves.append((row+4*dx, col, row+dx, col))'''
-                    
- 
+                        #loop in the direction
+                        if 0<=row+i*dx<=7 and 0<=col+i*dy<=7 and isEmpty(row+i*dx, col+i*dy):
+                            #here if we have captured on that direction we continue our looping but keeping track of the captured piece
+                            if captured:
+                                possible_moves.append((row+i*dx, col+i*dy,captured[0],captured[1]))
+                            #if we don't we loop  normally
+                            else:
+                                possible_moves.append((row+i*dx, col+i*dy,0,0))
+
+
+                        if oppositeColor((row,col),(row+i*dx, col+i*dy)) and 0<=row+i*dx+dx<=7 and 0<=col+i*dy+dy<=7 and isEmpty(row+i*dx+dx, col+i*dy+dy) :
+                            captured = (row+i*dx, col+i*dy)
+            else:
+                #loop over the 2 new squares
+                for dx,dy in directions:
+                    #making sure we are on bounds
+                    if 0<=row+dx<=7 and 0<=col+dy<=7 and isEmpty(row+dx, col+dy):
+
+                        #The last 2 variables are supposed to be the captured piece coordinates
+                        possible_moves.append((row+dx, col+dy, 0,0))
                         
-                        #we append the new location of the piece and the captured piece row and col
+                    #checking for captures
+                    if oppositeColor((row,col),(row+dx,col+dy)) and 0<=row+2*dx<=7 and 0<=col+2*dy<=7 and isEmpty(row+2*dx, col+2*dy):
+                        '''
+                        #leaving double captures for later
+                        if oppositeColor((row,col),(row+3*dx,col)) and 0<=row+4*dx<=7 and 0<=col+4*dy<=7 and isEmpty(row+4*dx, col+4*dy):
+                            possible_moves.append((row+4*dx, col+4*dy, row+3*dx, col+3*dy ))
 
-                    possible_moves.append((row+2*dx, col+2*dy, row+dx, col+dy ))
+                        if oppositeColor((row,col),(row+3*dx,col+dy)) and 0<=row+4*dx<=7 and isEmpty(row+4*dx, col):
+                            possible_moves.append((row+4*dx, col, row+dx, col))'''
+                        
+    
+                            
+                            #we append the new location of the piece and the captured piece row and col
 
+                        possible_moves.append((row+2*dx, col+2*dy, row+dx, col+dy ))
+            print(possible_moves)
             return possible_moves
 
 
@@ -257,8 +303,8 @@ def clickedPossibleMove(selected, pos):#This function checks if user clicked one
                     return (x,y,a,b)
 
 
-def movement(selected, pos):
-    if selected:
+def movement(selected, pos,turn):
+    if selected :
 
         clicked = clickedPossibleMove(selected, pos)
         
@@ -275,7 +321,11 @@ def movement(selected, pos):
             piecesmap[newrow][newcol] = piecesmap[row][col]
             #remove the original
             piecesmap[row][col] = ''
-
+            if newrow == 0 or newrow ==7:
+                makeKing(newrow, newcol)
+            
+            turn+=1
+        return turn
 
 
 #main game loop
@@ -285,7 +335,9 @@ def main():
     _VARS['highlight'] = pygame.Surface(SCREENSIZE, pygame.SRCALPHA)
     running = True
     selected = False
-  
+    #for turnbased
+    turn = 0
+    turns = {0: 'w', 1:'b'}
 
     while running:
         for event in pygame.event.get():
@@ -294,8 +346,9 @@ def main():
             #This checks for clicks
             if event.type ==pygame.MOUSEBUTTONUP:
 
-                if selected: 
-                    movement(selected, pygame.mouse.get_pos())
+                if selected and piecesmap[selected[0]][selected[1]].lower() == turns[turn%2]: 
+                    turn = movement(selected, pygame.mouse.get_pos(),turn)
+                    
                 selected = selectedPieceCoordinates()
 
 
@@ -304,7 +357,7 @@ def main():
         
         drawBoard()
         placePieces()
-        if selected:
+        if selected and piecesmap[selected[0]][selected[1]].lower() == turns[turn%2]:
             drawHighlight(selected)
             drawPossibleMoves(selected)
 
