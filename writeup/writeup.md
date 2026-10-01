@@ -61,3 +61,21 @@ But the highlight of today was when I continued, and added movement. This showed
 Capturing needed an another approach to the piece being captured. What I did was in the possible moves, I added 2 variables representing captured_row and captured_col and when they exists i.e aren't 0, then I delete the piece with those coordinate.
 
 I'm very proud of how this is coming along, next step is making it turn based which could be a struggle!
+
+## Day 6: Turns and Kings
+Well, turns were way easier than expected. I'm sure it's not the most optimal way but clever nonetheless. I made a variable `turn` and a dictionary `turns = {0: 'w', 1: 'b'}`. The main idea is incrementing turn after every move so basically if `turn` is even then it's white and if it is odd then it is black.
+
+In the main gameloop where I checked if `selected` exist I add this check:
+`and piecesmap[selected[0]][selected[1]]==turns[turn%2]`, if the selected cell color matches the turn's color then and only then make a move.
+
+Again I know there are ALOT of ways to better this but it's working and I came up with it soooooo Jackpot!!
+
+Now for the kings, in checkers, whenever a piece reaches the opposite's side last row it becomes a king, capable of performing bishop's move i.e all 4 diagonals.
+After many trial and error I implemented it and symbolized it with `W` and `B`.
+
+Mouvement down now for captures, a clever idea I had is instead of appending the captured move, I made a variable `captured` which stores the captured piece, then continue checking the rest of the diagonal.
+
+
+Scrap that crap I redid the whole capturing again, this time a `captured` array that stores all the pieces captured so far, useful and made double capturing possible, but normal capturing is fucked and I spent 30 minutes figuring out why the fuck does this happen, what I opted for was if there is a normal capture I append the captured piece coordinates aswell as the original one, and I check if `captured` is 4 elements long I check if it's the same only then delete, tedious, but working, and Mine!
+
+I can see the end mark and I've been having fun making this project!
