@@ -16,7 +16,7 @@ for row in range(piecesmap.shape[0]):
             piecesmap[row][col] = 'b'
         elif row in (5,6,7) and row%2 != col%2:
             piecesmap[row][col] = 'w'
-
+piecesmap[5][4] = 'W' 
 
 #variables related to the window
 _VARS = {'surf': False, 'gridWH':400,'gridOrigin':(100,140), 'gridCells':cellmap.shape[0], 'lineWidth':2}
@@ -186,8 +186,8 @@ def isKing(row, col):
 def getPossibleMoves(selected):
         
     #initialize  possible moves
-    possible_moves = []
-    captured_pieces = []
+    possible_moves = {}
+
 
     if selected:
         row,col = selected
@@ -208,7 +208,7 @@ def getPossibleMoves(selected):
         if isKing(row,col):
             #to tackle kings mouvements we first loop all 4 diagonals        
             for dx,dy in directions:
-
+                captured = ()
                 for i in range(1,8):
                     #if we encounter a piece of our own there is no point in continuing in that direction
                     if 0<=row+i*dx<=7 and 0<=col+i*dy<=7 and sameColor((row, col), (row+i*dx, col+i*dy)) :
@@ -219,7 +219,10 @@ def getPossibleMoves(selected):
         
                     #loop in the direction
                     if 0<=row+i*dx<=7 and 0<=col+i*dy<=7 and isEmpty(row+i*dx, col+i*dy):    
-                        possible_moves.append((row+i*dx, col+i*dy))
+                        if captured:
+                            possible_moves[(row+i*dx, col+i*dy)] = [(captured[0], captured[1])]
+                        else:    
+                            possible_moves[(row+i*dx, col+i*dy)] = []
 
 
 
@@ -228,18 +231,18 @@ def getPossibleMoves(selected):
                         for x,y in directions:
                             newrow,newcol = row+2*dx, col+2*dy
                             if 0<=newrow+x<=7 and 0<=newcol+y<=7 and oppositeColor((row,col),(newrow+x,newcol+y)) and 0<=newrow+2*x<=7 and 0<=newcol+2*y<=7 and isEmpty(newrow+2*x, newcol+2*y):
-                                possible_moves.append((newrow+2*x, newcol+2*y))
-                                captured_pieces.append((row+dx, col+dx))
-                                captured_pieces.append((newrow+x,newcol+y))
+                                possible_moves[(newrow+2*x, newcol+2*y)].append((row+dx, col+dy), (newrow+x, newcol+y))
+
                         
-                        captured_pieces.append((row+i*dx, col+i*dy))
-        else:
+                        captured = (row+i*dx, col+i*dy)
+        else: #if not king
+
             #loop over the 2 new squares
             for dx,dy in directions:
                 #making sure we are on bounds
                 if 0<=row+dx<=7 and 0<=col+dy<=7 and isEmpty(row+dx, col+dy):
                     #The last 2 variables are supposed to be the captured piece coordinates
-                    possible_moves.append((row+dx, col+dy))
+                    possible_moves[(row+dx, col+dy)] = []
                         
                     #checking for captures
                 if oppositeColor((row,col),(row+dx,col+dy)) and 0<=row+2*dx<=7 and 0<=col+2*dy<=7 and isEmpty(row+2*dx, col+2*dy):
@@ -247,15 +250,12 @@ def getPossibleMoves(selected):
                     for x,y in directions:
                         newrow,newcol = row+2*dx, col+2*dy
                         if 0<=newrow+x<=7 and 0<=newcol+y<=7 and oppositeColor((row,col),(newrow+x,newcol+y)) and 0<=newrow+2*x<=7 and 0<=newcol+2*y<=7 and isEmpty(newrow+2*x, newcol+2*y):
-                            possible_moves.append((newrow+2*x, newcol+2*y))
-                            captured_pieces.append((row+dx, col+dx))
-                            captured_pieces.append((newrow+x,newcol+y))
+                            possible_moves[(newrow+2*x, newcol+2*y)] = [(row+dx, col+dy),(newrow+x, newcol+y)]
             
                         #we append the new location of the piece and the captured piece row and col
-                    possible_moves.append((row+2*dx, col+2*dy))
-                    captured_pieces.append((row+dx, col+dy, row+2*dx, col+2*dy))
+                    possible_moves[(row+2*dx, col+2*dy)] = [(row+dx, col+dy)]
                         
-        return possible_moves, captured_pieces
+        return possible_moves
 
 
 
@@ -267,13 +267,13 @@ def drawPossibleMoves(selected):#draw said possible moves
     rect = None
 
     #we get the array of possible moves
-    possible_moves =getPossibleMoves(selected)[0]
+    possible_moves =getPossibleMoves(selected).keys()
     
     #check if its full
     if possible_moves:
         #loop over it
         for possible_move in possible_moves:
-            #since getpossiblemoves returns 4 variables we extract 4 tho we use 2
+            #since get ossiblemoves returns 4 variables we extract 4 tho we use 2
             col, row = possible_move
             #our trusty formula to go from matrice to grid
             x = _VARS['gridOrigin'][0] + (CELLDIMX*row)+_VARS['lineWidth']/2 + CELLDIMX/2
@@ -299,16 +299,19 @@ def clickedPossibleMove(selected, pos):#This function checks if user clicked one
         col,row = rowcol 
         #convert them to int
         col, row = int(col), int(row)
-        possible_moves, captured_pieces = getPossibleMoves(selected)
+        possible_moves_dict = getPossibleMoves(selected)
+        if possible_moves_dict:
+            possible_moves = list(possible_moves_dict.keys())
         #check if the clicked location is in possible moves        
-        if possible_moves:
+            if possible_moves:
             #x = row, y=col, a=captured piece row, b=captured piece col
-            for x,y in possible_moves:
-                if row == x and col == y:
-                    return (x,y), captured_pieces
+                for x,y in possible_moves:
+                    if row == x and col == y:
+                        return (x,y), possible_moves_dict.get((x,y))
 
 
 def movement(selected, pos,turn):
+    '''
     if selected :
         chosen_move = []
         captured_pieces=[]
@@ -333,14 +336,9 @@ def movement(selected, pos,turn):
             newrow, newcol = chosen_move
             if captured_pieces:
                 for capturedpiece in captured_pieces:
-                    if len(capturedpiece) == 4:
-                        if newrow == capturedpiece[2] and newcol == capturedpiece[3]:
-                            piecesmap[capturedpiece[0]][capturedpiece[1]] = ''
+                    if newrow == capturedpiece[2] and newcol == capturedpiece[3]:
+                        piecesmap[capturedpiece[0]][capturedpiece[1]] = ''
 
-                    else:
-                        capturedrow, capturedcol = capturedpiece
-                        #remove the captured piece
-                        piecesmap[capturedrow][capturedcol] =''
             #relocate the piece, the next line is to get the pieces color
             
             piecesmap[newrow][newcol] = piecesmap[row][col]
@@ -349,6 +347,33 @@ def movement(selected, pos,turn):
             if newrow == 0 or newrow ==7:
                 makeKing(newrow, newcol)
             
+            turn+=1
+        return turn
+'''
+    if selected:
+        chosen_move = []
+        captures = []
+        
+        clicked = clickedPossibleMove(selected, pos)
+        if clicked:
+            if clicked[0]:
+                chosen_move = clicked[0]
+            if clicked[1]:
+                captures = clicked[1]
+        
+        if chosen_move:
+            row, col = selected
+
+            newrow, newcol = chosen_move
+            if captures:
+                for x,y in captures:
+                    piecesmap[x][y]=''
+
+            piecesmap[newrow][newcol] = piecesmap[row][col]
+
+            piecesmap[row][col] = ''
+            if newrow in (0,7):
+                makeKing(newrow, newcol)
             turn+=1
         return turn
 
