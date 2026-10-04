@@ -79,3 +79,5 @@ Mouvement down now for captures, a clever idea I had is instead of appending the
 Scrap that crap I redid the whole capturing again, this time a `captured` array that stores all the pieces captured so far, useful and made double capturing possible, but normal capturing is fucked and I spent 30 minutes figuring out why the fuck does this happen, what I opted for was if there is a normal capture I append the captured piece coordinates aswell as the original one, and I check if `captured` is 4 elements long I check if it's the same only then delete, tedious, but working, and Mine!
 
 I can see the end mark and I've been having fun making this project!
+
+## Day 7: Captures, captures, captures

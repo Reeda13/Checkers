@@ -16,7 +16,7 @@ for row in range(piecesmap.shape[0]):
             piecesmap[row][col] = 'b'
         elif row in (5,6,7) and row%2 != col%2:
             piecesmap[row][col] = 'w'
-piecesmap[5][4] = 'W' 
+
 
 #variables related to the window
 _VARS = {'surf': False, 'gridWH':400,'gridOrigin':(100,140), 'gridCells':cellmap.shape[0], 'lineWidth':2}
@@ -182,6 +182,130 @@ def isKing(row, col):
     else:
         return False
 
+def inBound(row, col):
+    return 0<=row<=7 and 0<=col<=7
+
+
+def multiCaptureKings(piece, direction, piece_color=None,
+                 captured=None, land_to_capture=None):
+
+    if captured is None:
+        captured = []
+
+    if land_to_capture is None:
+        land_to_capture = {}
+
+    row, col = piece
+    # Get the king's color only on the first call
+    if piece_color is None:
+        piece_color = piecesmap[row][col].lower()
+
+    for dx, dy in direction:
+
+        for i in range(1, 8):
+
+            current = (row + i * dx, col + i * dy)
+
+            if not inBound(*current):
+                break
+
+            # Already captured pieces are treated as empty
+            if current in captured:
+                continue
+
+            current_piece = piecesmap[current[0]][current[1]]
+
+            # Empty square
+            if current_piece == '':
+                continue
+
+            # Friendly piece blocks this direction
+            if current_piece.lower() == piece_color.lower():
+                break
+
+            # Enemy found
+            if current_piece.lower() != piece_color.lower():
+
+                enemy = current
+
+                # Square immediately after enemy
+                landing = (row+(i+1)*dx, col+(i+1)*dy)
+
+                if not inBound(*landing):
+                    break
+
+                # Landing square must be empty
+                if not isEmpty(*landing):
+                    break
+
+                new_captured = captured + [enemy]
+
+                # King can land on any empty square beyond enemy
+                j = i + 1
+
+                while inBound(row+j*dx, col+j*dy):
+
+                    landing = (row+j*dx, col+j*dy)
+
+                    if not isEmpty(*landing):
+                        break
+
+                    # Store the COMPLETE capture chain
+                    land_to_capture[landing] = new_captured.copy()
+
+                    # Search all 4 directions from new position
+                    multiCaptureKings(
+                        landing,
+                        direction,
+                        piece_color,
+                        new_captured,
+                        land_to_capture
+                    )
+
+                    j += 1
+
+                break
+
+    return land_to_capture
+
+def multiCapture(piece, direction, piece_color=None, captured=None, land_to_capture=None):
+    #initializing captured and landtocapture
+    if captured is None:
+        captured = []
+    if land_to_capture is None:
+        land_to_capture = {}
+    
+    #origin coordinates
+    row, col = piece
+
+    if piece_color is None:
+        piece_color = piecesmap[row][col]
+
+    for dx, dy in direction:
+        enemy = (row+dx, col+dy)
+        landing = (row+2*dx, col+2*dy)
+        if not inBound(*enemy):
+            continue
+        if not inBound(*landing):
+            continue
+        if isEmpty(*enemy):
+            continue
+        if piecesmap[enemy[0]][enemy[1]].lower() == piece_color.lower():
+            continue
+
+        if not isEmpty(*landing):
+            continue
+        if enemy in captured:
+            continue
+
+        new_captured = captured+[enemy]
+        land_to_capture[landing] = new_captured.copy()
+    
+        multiCapture(landing, direction, piece_color, new_captured, land_to_capture)
+    return land_to_capture
+
+
+
 #rework on the getpossiblemoves
 def getPossibleMoves(selected):
         
@@ -208,55 +332,73 @@ def getPossibleMoves(selected):
         if isKing(row,col):
             #to tackle kings mouvements we first loop all 4 diagonals        
             for dx,dy in directions:
-                captured = ()
                 for i in range(1,8):
                     #if we encounter a piece of our own there is no point in continuing in that direction
-                    if 0<=row+i*dx<=7 and 0<=col+i*dy<=7 and sameColor((row, col), (row+i*dx, col+i*dy)) :
-                        break
-                    #if we have 2 oppenents pieces diagonally adgacent to eachother
-                    if 0<=row+i*dx<=7 and 0<=col+i*dy<=7 and oppositeColor((row, col), (row+i*dx, col+i*dy)) and 0<=row+i*dx+dx<=7 and 0<=col+i*dy+dy<=7 and not isEmpty(row+(i+1)*dx, col+(i+1)*dy) :
+                    if inBound(row+i*dx, col+i*dy) and not isEmpty(row+i*dx, col+i*dy):
                         break
         
                     #loop in the direction
-                    if 0<=row+i*dx<=7 and 0<=col+i*dy<=7 and isEmpty(row+i*dx, col+i*dy):    
-                        if captured:
-                            possible_moves[(row+i*dx, col+i*dy)] = [(captured[0], captured[1])]
-                        else:    
+                    if inBound(row+i*dx, col+i*dy) and isEmpty(row+i*dx, col+i*dy):    
                             possible_moves[(row+i*dx, col+i*dy)] = []
 
-
-
-
-                    if oppositeColor((row,col),(row+i*dx, col+i*dy)) and 0<=row+i*dx+dx<=7 and 0<=col+i*dy+dy<=7 and isEmpty(row+i*dx+dx, col+i*dy+dy) :
-                        for x,y in directions:
-                            newrow,newcol = row+2*dx, col+2*dy
-                            if 0<=newrow+x<=7 and 0<=newcol+y<=7 and oppositeColor((row,col),(newrow+x,newcol+y)) and 0<=newrow+2*x<=7 and 0<=newcol+2*y<=7 and isEmpty(newrow+2*x, newcol+2*y):
-                                possible_moves[(newrow+2*x, newcol+2*y)].append((row+dx, col+dy), (newrow+x, newcol+y))
-
-                        
-                        captured = (row+i*dx, col+i*dy)
+                    
+            possible_moves.update(multiCaptureKings((row,col), directions))
+        
         else: #if not king
 
             #loop over the 2 new squares
             for dx,dy in directions:
                 #making sure we are on bounds
-                if 0<=row+dx<=7 and 0<=col+dy<=7 and isEmpty(row+dx, col+dy):
+                if inBound(row+dx, col+dy) and isEmpty(row+dx, col+dy):
                     #The last 2 variables are supposed to be the captured piece coordinates
                     possible_moves[(row+dx, col+dy)] = []
                         
                     #checking for captures
-                if oppositeColor((row,col),(row+dx,col+dy)) and 0<=row+2*dx<=7 and 0<=col+2*dy<=7 and isEmpty(row+2*dx, col+2*dy):
-                    #double captures
-                    for x,y in directions:
-                        newrow,newcol = row+2*dx, col+2*dy
-                        if 0<=newrow+x<=7 and 0<=newcol+y<=7 and oppositeColor((row,col),(newrow+x,newcol+y)) and 0<=newrow+2*x<=7 and 0<=newcol+2*y<=7 and isEmpty(newrow+2*x, newcol+2*y):
-                            possible_moves[(newrow+2*x, newcol+2*y)] = [(row+dx, col+dy),(newrow+x, newcol+y)]
-            
-                        #we append the new location of the piece and the captured piece row and col
-                    possible_moves[(row+2*dx, col+2*dy)] = [(row+dx, col+dy)]
-                        
+            possible_moves.update(multiCapture((row,col), directions))               
+
         return possible_moves
 
+#to force captures
+def forcedCaptures(selected):
+    forced_capture = {}
+    possible_moves = {}
+    
+    if not selected:
+        return
+
+    #we loop over the whole board
+    for row in range(8):
+        for col in range(8):
+            if isEmpty(row, col) or oppositeColor(selected, (row,col)):
+                continue
+            #we get all the possible moves
+            possible_moves[(row,col)]= getPossibleMoves((row,col))
+    
+    if possible_moves:
+        #for each piece
+        for piece in possible_moves:
+            #if it has a destination
+            if possible_moves[piece]:
+                #we loop over the destinations
+                for destination in possible_moves[piece]:
+                    #if it has a capture
+                    capture = possible_moves[piece][destination]
+                    if capture:
+                        if piece in forced_capture:
+                            forced_capture[piece][destination]=capture
+                        else:
+                            forced_capture[piece] = {destination: capture}
+        #if legal moves isnt empty it means we have a capture
+        if forced_capture:
+            #if the selected piece has a capture
+            if selected in forced_capture:
+                return forced_capture[selected]
+            #if it doesnt return nothing
+            else: 
+                return {}
+        #if no captures return possible moves    
+        return possible_moves[selected]
+        
 
 
 def drawPossibleMoves(selected):#draw said possible moves
@@ -267,7 +409,7 @@ def drawPossibleMoves(selected):#draw said possible moves
     rect = None
 
     #we get the array of possible moves
-    possible_moves =getPossibleMoves(selected).keys()
+    possible_moves =forcedCaptures(selected)
     
     #check if its full
     if possible_moves:
@@ -292,6 +434,8 @@ def drawPossibleMoves(selected):#draw said possible moves
         _VARS['surf'].blit(_VARS['highlight'], (0,0))
     
 
+
+
 def clickedPossibleMove(selected, pos):#This function checks if user clicked one of the possible moves squares
     rowcol = getRowCol(pos)
     if rowcol:
@@ -299,7 +443,7 @@ def clickedPossibleMove(selected, pos):#This function checks if user clicked one
         col,row = rowcol 
         #convert them to int
         col, row = int(col), int(row)
-        possible_moves_dict = getPossibleMoves(selected)
+        possible_moves_dict = forcedCaptures(selected)
         if possible_moves_dict:
             possible_moves = list(possible_moves_dict.keys())
         #check if the clicked location is in possible moves        
@@ -311,45 +455,7 @@ def clickedPossibleMove(selected, pos):#This function checks if user clicked one
 
 
 def movement(selected, pos,turn):
-    '''
-    if selected :
-        chosen_move = []
-        captured_pieces=[]
-        
-        clicked = clickedPossibleMove(selected, pos)
-        if clicked:
-            if clicked[0]:
-                chosen_move = clicked[0]
-            else:
-                chosen_move=[]
-
-            if clicked[1]:
-                captured_pieces = clicked[1]
-            else:
-                captured_pieces = [] 
-        
-        
-        if chosen_move:
-            
-            row, col = selected
-            #we extract the 4 variables form possible moves
-            newrow, newcol = chosen_move
-            if captured_pieces:
-                for capturedpiece in captured_pieces:
-                    if newrow == capturedpiece[2] and newcol == capturedpiece[3]:
-                        piecesmap[capturedpiece[0]][capturedpiece[1]] = ''
-
-            #relocate the piece, the next line is to get the pieces color
-            
-            piecesmap[newrow][newcol] = piecesmap[row][col]
-            #remove the original
-            piecesmap[row][col] = ''
-            if newrow == 0 or newrow ==7:
-                makeKing(newrow, newcol)
-            
-            turn+=1
-        return turn
-'''
+    
     if selected:
         chosen_move = []
         captures = []

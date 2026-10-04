@@ -3,7 +3,7 @@ STEP 0
     draw the pieces in state 0                          done
     piece mouvement                                     done
     piece captures                                      done
-    checker rules
+    checker rules                                       half done
     highlight selected squares and possible moves       done
     turn by turn                                        done
     polishing
