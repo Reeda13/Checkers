@@ -81,3 +81,9 @@ Scrap that crap I redid the whole capturing again, this time a `captured` array 
 I can see the end mark and I've been having fun making this project!
 
 ## Day 7: Captures, captures, captures
+Nearly lost my mind today, I made and remade and reremade and rere.....remade the capture logic a thousand times, but alas, it finally works properly!!
+
+The main problem was multi-captures and king captures, I knew how I should implement it but avoided it, by **recursion**. but I figured it out, with help tho, but still, I am damn proud!!
+
+Next step was forcing the captures, which was a lot easier.
+Finish line is closer, I need some UI and player feedback then I am done!!
