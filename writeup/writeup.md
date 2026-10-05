@@ -87,3 +87,11 @@ The main problem was multi-captures and king captures, I knew how I should imple
 
 Next step was forcing the captures, which was a lot easier.
 Finish line is closer, I need some UI and player feedback then I am done!!
+
+## Day 8: End screen
+Day 8 was cute, I made a simple end screen:
+
+![end screen](image-5.png)
+
+Currently the only the Quit button works, I'm still trying to figure out play again.
+The end screen only shows when a side has captured all opponents pieces though, still need the no moves cases

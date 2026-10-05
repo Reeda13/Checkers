@@ -27,7 +27,10 @@ LIGHTCOLOR = (219, 184, 108)
 DARKCOLOR = (69, 36, 20)
 HIGHLIGHT =(0,255,0,100)
 CELLDIMX=CELLDIMY= float(_VARS['gridWH']/_VARS['gridCells']) #cell dimensions
-
+RED = (153,0,0)
+LIGHTERED = (240, 0, 0)
+GREEN = (0, 100, 0)
+LIGHTGREEN = (0,200, 0)
 
 #this allows me to get which row and column the click was on
 def getRowCol(pos):
@@ -483,14 +486,87 @@ def movement(selected, pos,turn):
             turn+=1
         return turn
 
+def checkForWins(): #function to check if any side captured all pieces
+        white, black = 0,0
+        for row in range(8):
+            for col in range(8):
+                if piecesmap[row][col].lower() == 'w':
+                    white +=1
+                if piecesmap[row][col].lower() == 'b':
+                    black +=1
+        if black == 0:
+            return 'White'
+        elif white == 0:
+            return 'Black'
+    
+
+
+def endScreen(end):
+    winning_side = checkForWins()
+    if winning_side:
+        #Title
+        font = pygame.font.SysFont("Helvetica", 80, bold=True)
+        font.set_underline(True)
+        text = font.render(f"{winning_side} wins!", True, (0,0,0))
+        font.set_underline(False)
+
+        #Buttons text
+        smallfont = pygame.font.SysFont("Corbel", 40, bold=True)
+        quit = smallfont.render("Quit", True, "White")
+        play_again = smallfont.render("Play again", True, "White")
+                    
+        #Coloring background and blitting title
+        _VARS['highlight'].fill((255, 191, 0, 200))
+        _VARS['surf'].blit(_VARS['highlight'], (0,0))
+        _VARS['surf'].blit(text, (80,40))
+            
+        #border
+        pygame.draw.rect(_VARS['surf'], "black", (10,10, 580, 580), 10)
+        #get mouse position
+        mouse = pygame.mouse.get_pos()
+            
+        #hovering over quit
+        if 350<=mouse[0]<=550 and 400<=mouse[1]<=470:
+            pygame.draw.rect(_VARS['surf'], LIGHTERED, (350, 400, 200, 70))
+        else:
+            pygame.draw.rect(_VARS['surf'], RED, (350, 400, 200, 70))
+        _VARS['surf'].blit(quit, (410, 415))
+            
+        #Hovering over play again        
+        if 50<=mouse[0]<=270 and 400<=mouse[1]<=470:
+            pygame.draw.rect(_VARS['surf'], LIGHTGREEN, (50, 400, 220, 70))
+        else:
+            pygame.draw.rect(_VARS['surf'], GREEN, (50, 400, 220, 70))
+        _VARS['surf'].blit(play_again, (70, 415))
+
+        end = True
+        return end
+
+def gameLoop(selected, turns, turn):
+    #Filling everything
+    _VARS['surf'].fill((117, 115,115))
+    
+    drawBoard()
+    placePieces()
+    if selected and piecesmap[selected[0]][selected[1]].lower() == turns[turn%2]:
+        drawHighlight(selected)
+        drawPossibleMoves(selected)
+    
+
 
 #main game loop
 def main():
     pygame.init()
+    pygame.font.init()
     _VARS['surf'] = pygame.display.set_mode(SCREENSIZE)
+    pygame.display.set_caption("Checkers")
     _VARS['highlight'] = pygame.Surface(SCREENSIZE, pygame.SRCALPHA)
+    
+    #Booleans for making track of the game
     running = True
     selected = False
+    end = False
+
     #for turnbased
     turn = 0
     turns = {0: 'w', 1:'b'}
@@ -502,21 +578,28 @@ def main():
             #This checks for clicks
             if event.type ==pygame.MOUSEBUTTONUP:
 
-                if selected and piecesmap[selected[0]][selected[1]].lower() == turns[turn%2]: 
+                if not(end) and selected and piecesmap[selected[0]][selected[1]].lower() == turns[turn%2]: 
                     turn = movement(selected, pygame.mouse.get_pos(),turn)
-                    
                 selected = selectedPieceCoordinates()
 
+                if end:
+                    mouse = pygame.mouse.get_pos()
+                    #quit 
+                    if 350<=mouse[0]<=550 and 400<=mouse[1]<=470:
+                        running = False
+                    
+                    #play again
+                    if 50<=mouse[0]<=270 and 400<=mouse[1]<=470:
+                        pass
 
-
-        _VARS['surf'].fill('grey')
+        end = endScreen(end)
         
-        drawBoard()
-        placePieces()
-        if selected and piecesmap[selected[0]][selected[1]].lower() == turns[turn%2]:
-            drawHighlight(selected)
-            drawPossibleMoves(selected)
+        if not end:
+            gameLoop(selected, turns, turn)
+        
 
+                
+        
 
         pygame.display.update()
 
