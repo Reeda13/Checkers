@@ -94,4 +94,10 @@ Day 8 was cute, I made a simple end screen:
 ![end screen](image-5.png)
 
 Currently the only the Quit button works, I'm still trying to figure out play again.
-The end screen only shows when a side has captured all opponents pieces though, still need the no moves cases
+The end screen only shows when a side has captured all opponents pieces though, still need the no moves cases.
+
+## Day 9: Checkers_final.py
+Today, I fixed all of yesterday's problems, I made the play again work, the no moves cases.
+I also made a main menu and unified the palette:
+![main menu](image-6.png)
+Just some polishing left annd it will be done!!!1
