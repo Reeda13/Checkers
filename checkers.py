@@ -15,7 +15,7 @@ for row in range(piecesmap.shape[0]):
         if row in (0,1,2) and row%2 !=col%2:
             piecesmap[row][col] = 'b'
         elif row in (5,6,7) and row%2 != col%2:
-            piecesmap[row][col] = 'w'
+            piecesmap[row][col] = 'w' 
 
 
 #variables related to the window
@@ -134,13 +134,13 @@ def drawBoard():
         
         #draw the border
         #top
-        pygame.draw.line(_VARS['surf'],'black', (cont_x, cont_y), (CONTAINER_SIZE+cont_x, cont_y), _VARS['lineWidth'])
+        pygame.draw.line(_VARS['surf'],'black', (cont_x, cont_y), (CONTAINER_SIZE+cont_x, cont_y), 20)
         #bottom
-        pygame.draw.line(_VARS['surf'],'black',(cont_x, CONTAINER_SIZE+cont_y),(CONTAINER_SIZE+cont_x, CONTAINER_SIZE+cont_y) ,  _VARS['lineWidth'])
+        pygame.draw.line(_VARS['surf'],'black',(cont_x, CONTAINER_SIZE+cont_y),(CONTAINER_SIZE+cont_x, CONTAINER_SIZE+cont_y) , 20)
         #left
-        pygame.draw.line(_VARS['surf'],'black', (cont_x, cont_y), (cont_x,CONTAINER_SIZE+ cont_y),  _VARS['lineWidth'])
+        pygame.draw.line(_VARS['surf'],'black', (cont_x, cont_y), (cont_x,CONTAINER_SIZE+ cont_y),  20)
         #right
-        pygame.draw.line(_VARS['surf'],'black', (CONTAINER_SIZE+cont_x, cont_y), (CONTAINER_SIZE+cont_x, CONTAINER_SIZE+cont_y),  _VARS['lineWidth'])
+        pygame.draw.line(_VARS['surf'],'black', (CONTAINER_SIZE+cont_x, cont_y), (CONTAINER_SIZE+cont_x, CONTAINER_SIZE+cont_y),20)
 
         cellSize=CONTAINER_SIZE//cells
 
@@ -377,6 +377,10 @@ def forcedCaptures(selected):
             #we get all the possible moves
             possible_moves[(row,col)]= getPossibleMoves((row,col))
     
+
+            
+          
+
     if possible_moves:
         #for each piece
         for piece in possible_moves:
@@ -401,7 +405,7 @@ def forcedCaptures(selected):
                 return {}
         #if no captures return possible moves    
         return possible_moves[selected]
-        
+ 
 
 
 def drawPossibleMoves(selected):#draw said possible moves
@@ -487,73 +491,161 @@ def movement(selected, pos,turn):
         return turn
 
 def checkForWins(): #function to check if any side captured all pieces
-        white, black = 0,0
-        for row in range(8):
-            for col in range(8):
-                if piecesmap[row][col].lower() == 'w':
-                    white +=1
-                if piecesmap[row][col].lower() == 'b':
-                    black +=1
-        if black == 0:
-            return 'White'
-        elif white == 0:
+    if not hasMoves(turns[turn%2]):
+        if turns[turn%2] == 'w':
             return 'Black'
+        else: return 'White'    
+    white, black = 0,0
+    for row in range(8):
+        for col in range(8):
+            if piecesmap[row][col].lower() == 'w':
+                white +=1
+            if piecesmap[row][col].lower() == 'b':
+                black +=1
+    if black == 0:
+        return 'White'
+    elif white == 0:
+        return 'Black'
     
+def hasMoves(color):
+    possible_moves = {}
+    for row in range(8):
+        for col in range(8):
+            if piecesmap[row][col].lower() != color:
+                continue
+            possible_moves =getPossibleMoves((row,col))
+            if possible_moves:
+                return True
+    return False
 
+def endScreen():
 
-def endScreen(end):
-    winning_side = checkForWins()
-    if winning_side:
+        winning_side = checkForWins()
+        if winning_side:
+            #Title
+            font = pygame.font.SysFont("Helvetica", 80, bold=True)
+            font.set_underline(True)
+            text = font.render(f"{winning_side} wins!", True, (0,0,0))
+            font.set_underline(False)
+
+            #Buttons text
+            smallfont = pygame.font.SysFont("Corbel", 40, bold=True)
+            quit = smallfont.render("Quit", True, "White")
+            play_again = smallfont.render("Play again", True, "White")
+                        
+            #Coloring background and blitting title
+            _VARS['surf'].fill((37,114,38))
+            _VARS['surf'].blit(text, (80,40))
+                
+            #border
+            pygame.draw.rect(_VARS['surf'], "black", (10,10, 580, 580), 10)
+            #get mouse position
+            mouse = pygame.mouse.get_pos()
+                
+            #hovering over quit
+            if 350<=mouse[0]<=550 and 400<=mouse[1]<=470:
+                pygame.draw.rect(_VARS['surf'], LIGHTERED, (350, 400, 200, 70))
+            else:
+                pygame.draw.rect(_VARS['surf'], RED, (350, 400, 200, 70))
+            _VARS['surf'].blit(quit, (410, 415))
+                
+            #Hovering over play again        
+            if 50<=mouse[0]<=270 and 400<=mouse[1]<=470:
+                pygame.draw.rect(_VARS['surf'], LIGHTGREEN, (50, 400, 220, 70))
+            else:
+                pygame.draw.rect(_VARS['surf'], GREEN, (50, 400, 220, 70))
+            _VARS['surf'].blit(play_again, (70, 415))
+
+            return True
+        else:
+            return False
+        
+def gameLoop(selected, end=False):
+    #Filling everything
+    _VARS['surf'].fill((49, 120, 35))
+
+    #title on top of board
+    font = pygame.font.SysFont("Helvetica", 100, bold=True)
+    checkers_text = font.render("Checkers", True,(121, 217, 124))
+    _VARS['surf'].blit(checkers_text, (70,20))
+    
+    if not end:   
+        drawBoard()
+        placePieces()
+        if selected and piecesmap[selected[0]][selected[1]].lower() == turns[turn%2]:
+                drawHighlight(selected)
+                drawPossibleMoves(selected)
+        
+    
+def resetBoard():
+    global piecesmap
+    piecesmap = np.zeros((8,8), dtype=str)
+    for row in range(piecesmap.shape[0]):
+        for col in range(piecesmap.shape[1]):
+            if row in (0,1,2) and row%2 !=col%2:
+                piecesmap[row][col] = 'b'
+            elif row in (5,6,7) and row%2 != col%2:
+                piecesmap[row][col] = 'w'
+
+def mainMenu(main_menu):
+    if main_menu:
+        _VARS['surf'].fill((37,114, 38))
+
+        #Border
+        pygame.draw.rect(_VARS['surf'], (121, 217, 124), (20, 20, 560, 560), 10)
+
         #Title
-        font = pygame.font.SysFont("Helvetica", 80, bold=True)
-        font.set_underline(True)
-        text = font.render(f"{winning_side} wins!", True, (0,0,0))
-        font.set_underline(False)
+        title = pygame.font.SysFont("Helvetica", 100, bold=True)
+        title.set_underline(True)
+        checkers_text = title.render("Checkers", True, (121, 217, 124))
+        _VARS['surf'].blit(checkers_text, (70, 100))
+
+
+        #watermark
+        wtermark = pygame.font.SysFont("Corbel", 20)
+        maker = wtermark.render("Made by: Reeda13", True, "black") 
+        _VARS['surf'].blit(maker, (400,550))
+
+
+        #checkers in the middle
+        pygame.draw.circle(_VARS['surf'], "black", (300,350), 100)
+        pygame.draw.circle(_VARS['surf'], (42,42,42), (300,350), 90)
+        pygame.draw.circle(_VARS['surf'], "black", (300,350), 80)
+        pygame.draw.circle(_VARS['surf'], (42,42,42), (300,350), 70)
+        pygame.draw.circle(_VARS['surf'], "black", (300,350), 60)
+        pygame.draw.circle(_VARS['surf'], (42,42,42), (300,350), 50)
+        pygame.draw.circle(_VARS['surf'], "black", (300,350), 40)
+        pygame.draw.circle(_VARS['surf'], (42,42,42), (300,350), 30)
+        pygame.draw.circle(_VARS['surf'], "black", (300,350), 20)
+        pygame.draw.circle(_VARS['surf'], (42,42,42), (300,350), 10)
+
 
         #Buttons text
         smallfont = pygame.font.SysFont("Corbel", 40, bold=True)
         quit = smallfont.render("Quit", True, "White")
-        play_again = smallfont.render("Play again", True, "White")
-                    
-        #Coloring background and blitting title
-        _VARS['highlight'].fill((255, 191, 0, 200))
-        _VARS['surf'].blit(_VARS['highlight'], (0,0))
-        _VARS['surf'].blit(text, (80,40))
-            
-        #border
-        pygame.draw.rect(_VARS['surf'], "black", (10,10, 580, 580), 10)
+        play = smallfont.render("Play ", True, "White")
+                        
+                
         #get mouse position
         mouse = pygame.mouse.get_pos()
-            
+                
         #hovering over quit
-        if 350<=mouse[0]<=550 and 400<=mouse[1]<=470:
-            pygame.draw.rect(_VARS['surf'], LIGHTERED, (350, 400, 200, 70))
+        if 350<=mouse[0]<=550 and 460<=mouse[1]<=530:
+            pygame.draw.rect(_VARS['surf'], LIGHTERED, (350, 460, 200, 70))
         else:
-            pygame.draw.rect(_VARS['surf'], RED, (350, 400, 200, 70))
-        _VARS['surf'].blit(quit, (410, 415))
-            
-        #Hovering over play again        
-        if 50<=mouse[0]<=270 and 400<=mouse[1]<=470:
-            pygame.draw.rect(_VARS['surf'], LIGHTGREEN, (50, 400, 220, 70))
+            pygame.draw.rect(_VARS['surf'], RED, (350, 460, 200, 70))
+        _VARS['surf'].blit(quit, (410, 475))
+                
+            #Hovering over play        
+        if 50<=mouse[0]<=270 and 460<=mouse[1]<=530:
+            pygame.draw.rect(_VARS['surf'], LIGHTGREEN, (50, 460, 220, 70))
         else:
-            pygame.draw.rect(_VARS['surf'], GREEN, (50, 400, 220, 70))
-        _VARS['surf'].blit(play_again, (70, 415))
+            pygame.draw.rect(_VARS['surf'], GREEN, (50, 460, 220, 70))
+        _VARS['surf'].blit(play, (120, 475))
 
-        end = True
-        return end
-
-def gameLoop(selected, turns, turn):
-    #Filling everything
-    _VARS['surf'].fill((117, 115,115))
+    else:
+        return 
     
-    drawBoard()
-    placePieces()
-    if selected and piecesmap[selected[0]][selected[1]].lower() == turns[turn%2]:
-        drawHighlight(selected)
-        drawPossibleMoves(selected)
-    
-
-
 #main game loop
 def main():
     pygame.init()
@@ -566,9 +658,13 @@ def main():
     running = True
     selected = False
     end = False
+    main_menu = True
+ 
 
     #for turnbased
+    global turn
     turn = 0
+    global turns
     turns = {0: 'w', 1:'b'}
 
     while running:
@@ -590,17 +686,28 @@ def main():
                     
                     #play again
                     if 50<=mouse[0]<=270 and 400<=mouse[1]<=470:
-                        pass
+                        end = False
+                        turn = 0
+                        resetBoard()
 
-        end = endScreen(end)
+                if main_menu:
+                    mouse = pygame.mouse.get_pos()
+                    #quit 
+                    if 350<=mouse[0]<=550 and 460<=mouse[1]<=530:
+                        running = False
+                    
+                    #play
+                    if 50<=mouse[0]<=270 and 460<=mouse[1]<=530 and not end:
+                        gameLoop(selected)
+                        main_menu = False
+                        
+        if main_menu:
+            mainMenu(main_menu)
+        else: gameLoop(selected)
         
-        if not end:
-            gameLoop(selected, turns, turn)
+        end = endScreen()
         
-
-                
         
-
         pygame.display.update()
 
 
