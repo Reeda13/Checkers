@@ -15,20 +15,27 @@ Using `numpy` I made a matrice with alternating `1` and `0` and used a `for` loo
 
 After finishing the board, I tweaked and polished the code and called it a rest.
 
-![board](/writeup/image.png)
+<img width="400" height="400" alt="board" src="https://github.com/user-attachments/assets/db4074aa-22b3-40b9-ad50-d29cada5b301" />
+
 
 ## Day2: The pieces
 
 After getting the board done now it's time for the pieces, I wrote a function that draws a circle in the middle of the square and got the dimensions of said center from the function that draws the board.
 
 Then I had to think of a way to know which would be colored white and which would be black. So, based on the same idea of the board I made a matrice that places `'w'` for white and `'b'` for black, worked great! 
-![pieces](image-1.png)
+
+<img width="400" height="400" alt="pieces" src="https://github.com/user-attachments/assets/a58f9bc7-bde5-4030-958b-3cad8efc44db" />
+
 Here I found myself in front of a problem. That being in the future when I implement movement and turns, each time a piece gets moved the whole board would be drawn again which could get laggy.
 To remediate that I had to separate the functions `drawBoard()` from `placePieces()` and for that I made some variables global constants so any functions could use em which got the job done!
 
 ## Day 3: The highlight
 Today was a hard one, I wanted to make the selected cells highlighted, after lot of thinking I had an idea!
-First I ought to extract the row and column ie the cell from a click, I first search on how to get the position of the cursor, then calculated the distance between it and the origin of the grid, afterward I derived row and col from the formula I used to draw the cells, ![et voila!](image-2.png)
+First I ought to extract the row and column ie the cell from a click, I first search on how to get the position of the cursor, then calculated the distance between it and the origin of the grid, afterward I derived row and col from the formula I used to draw the cells, et voila!
+
+<img width="500" height="500" alt="et voila" src="https://github.com/user-attachments/assets/edd3b325-b786-42a7-83c2-4c1cdd1af4d2" />
+
+
 After getting the row and col I established a direct link between the graphical grid and the matrix representing it, which would make it easier in the future. Now for our actual goal, I  struggled to draw the highlight, tried various failed method, the one I settled with was making a second surface, and draw a transparent green square. The idea of a second surface occured to me when I realized that to use the alpha layer of a color I need to specify it on the surface so I did.
 
 A lot of meddling after I separated the process into 4 functions:
@@ -38,7 +45,7 @@ A lot of meddling after I separated the process into 4 functions:
 - `drawHighlight()` gets an argument `selected`, this argument stores the current selected cell coordinates, the function deletes any previous drawing in the second surface and draws the highlight
   
 To make everything work in the `main` function I check for any click and if one is detected `selected` stores the coordinates using `selectedPieceCoordinates()`, I do another check after so that if selected isn't empty `drawHighlight()` does it's job!
-![highlight](image-3.png)
+<img width="400" height="400" alt="highlight" src="https://github.com/user-attachments/assets/0d563efd-7206-4792-96d3-1f1993384c17" />
 
 ## Day 4: Possible moves
 I'm very proud of this day! Today's goal was to compute the possible moves, store them and show them.
@@ -51,7 +58,8 @@ I then made a second function `drawPossibleMoves()` which does what the name sug
 
 I was feeling proud and well so I tought why not tackling capturing case, in `getPossibleMoves()` I added more edge cases to check if the one of the 2 cells diagonally have an opposite color piece and if so and only if it is empty and in bound can render it.
 
-![Possible moves](image-4.png) 
+<img width="400" height="400" alt="possmoves" src="https://github.com/user-attachments/assets/0cb7d1e4-faa8-4e18-a741-5b455733f91f" />
+
 
 ## Day 5: Mouvement and captures
 Today, I told myself I would just make a hover effect on the possible moves squares which after lots of meddling I did! Process was weird and I had to redo A lot of stuff, but done nonetheless.
@@ -91,7 +99,8 @@ Finish line is closer, I need some UI and player feedback then I am done!!
 ## Day 8: End screen
 Day 8 was cute, I made a simple end screen:
 
-![end screen](image-5.png)
+<img width="400" height="400" alt="end screen" src="https://github.com/user-attachments/assets/d8bf1125-6de8-4647-9ed2-7919b266becb" />
+
 
 Currently the only the Quit button works, I'm still trying to figure out play again.
 The end screen only shows when a side has captured all opponents pieces though, still need the no moves cases.
@@ -99,5 +108,8 @@ The end screen only shows when a side has captured all opponents pieces though, 
 ## Day 9: Checkers_final.py
 Today, I fixed all of yesterday's problems, I made the play again work, the no moves cases.
 I also made a main menu and unified the palette:
-![main menu](image-6.png)
+
+<img width="727" height="725" alt="image-6" src="https://github.com/user-attachments/assets/33532c41-9296-4b08-a752-aa7ac9d66c16" />
+
+
 Just some polishing left annd it will be done!!!1
