@@ -19,15 +19,20 @@ Basically what each checkers game needs:
 <img width="300" height="300" alt="captures" src="https://github.com/user-attachments/assets/7b6fc2b4-d5e2-4910-a3c7-fe3a00d1b54e" />
 
 ## Installation
-Clone the repository:
+- Clone the repository:
 ```
 git clone https://github.com/Reeda13/Checkers.git
 cd Checkers
 ```
-Install pygame:
-
-`python -m pip install pygame-ce`
-
-Run the script:
-
-`python Checkers.py`
+- Install pygame:
+```
+python -m pip install pygame-ce
+```
+- Install numpy:
+```
+python -m pip install numpy
+```
+- Run the script:
+```
+python Checkers.py
+```
